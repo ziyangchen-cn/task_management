@@ -105,16 +105,40 @@
       });
     },
 
+    // Local-only bookkeeping key: records when THIS device last wrote each of
+    // the 4 sync keys. Never pushed to Supabase itself -- used only to decide,
+    // on the next boot, whether Supabase has a newer copy than what's on disk
+    // here (see syncFromRemote below).
+    metaKey: 'research_os.syncMeta',
+
+    /** ts must be the exact same timestamp that was just written to Supabase
+     *  for these keys (see RO.Sync.pushAll) -- using a separately-taken local
+     *  clock reading here would let clock skew of even 1ms make an already
+     *  up-to-date device look "stale" on its own data during the next boot's
+     *  freshness check. */
+    _touchLocalMeta: function(keys, ts){
+      return RO.Storage.load(RO.Storage.metaKey, {}).then(function(meta){
+        keys.forEach(function(k){ meta[k] = ts; });
+        return RO.Storage.save(RO.Storage.metaKey, meta);
+      });
+    },
+
     /** Returns Promise (fire-and-forget safe) */
     saveAll: function(state){
       var jobs = [];
-      if(state.tasks)      jobs.push(RO.Storage.save(RO.Constants.STORAGE_KEYS.TASKS,      state.tasks));
-      if(state.categories) jobs.push(RO.Storage.save(RO.Constants.STORAGE_KEYS.CATEGORIES, state.categories));
-      if(state.projects)   jobs.push(RO.Storage.save(RO.Constants.STORAGE_KEYS.PROJECTS,   state.projects));
-      if(state.appState)   jobs.push(RO.Storage.save(RO.Constants.STORAGE_KEYS.APP_STATE,  state.appState));
+      var touchedKeys = [];
+      if(state.tasks){      jobs.push(RO.Storage.save(RO.Constants.STORAGE_KEYS.TASKS,      state.tasks));      touchedKeys.push(RO.Constants.STORAGE_KEYS.TASKS); }
+      if(state.categories){ jobs.push(RO.Storage.save(RO.Constants.STORAGE_KEYS.CATEGORIES, state.categories)); touchedKeys.push(RO.Constants.STORAGE_KEYS.CATEGORIES); }
+      if(state.projects){   jobs.push(RO.Storage.save(RO.Constants.STORAGE_KEYS.PROJECTS,   state.projects));   touchedKeys.push(RO.Constants.STORAGE_KEYS.PROJECTS); }
+      if(state.appState){   jobs.push(RO.Storage.save(RO.Constants.STORAGE_KEYS.APP_STATE,  state.appState));   touchedKeys.push(RO.Constants.STORAGE_KEYS.APP_STATE); }
       // Cloud backup, no-op until Supabase is configured (see js/supabase-sync.js).
-      // Runs alongside the local save, never blocks or fails the local write.
-      if(RO.Sync && RO.Sync.available) RO.Sync.pushAll(state);
+      // Local meta is only touched once the push confirms the server timestamp,
+      // so it never runs (and never matters) when sync isn't configured.
+      if(RO.Sync && RO.Sync.available){
+        RO.Sync.pushAll(state).then(function(result){
+          if(result && result.ok) RO.Storage._touchLocalMeta(touchedKeys, result.updatedAt);
+        });
+      }
       return Promise.all(jobs);
     },
 
@@ -160,37 +184,47 @@
         });
     },
 
-    /* ── One-time pull from Supabase on a brand-new device/browser ──── */
+    /* ── Pull-if-newer from Supabase, on every boot ──────────────────── */
     /**
-     * If this device's IndexedDB has no data yet, and Supabase is configured
-     * (RO.Sync.available), pull the last-synced copy down and seed IndexedDB
-     * with it. Same "only if local is empty" rule as migrateFromLocalStorage,
-     * so an existing device with real local data is never overwritten by a
-     * stale remote copy. Returns Promise<boolean> (true = data was pulled).
+     * Runs on every boot (not just for brand-new devices): for each of the 4
+     * sync keys, compares Supabase's updated_at against this device's own
+     * "_touchLocalMeta" timestamp for that key, and pulls the remote copy in
+     * only if it's actually newer. This is what makes edits made from one
+     * origin (e.g. GitHub Pages) show up when you later open another origin
+     * (e.g. localhost) -- the old "only pull if local is totally empty" rule
+     * only ever helped the very first boot on a brand-new device.
+     * Returns Promise<boolean> (true = at least one key was updated).
      */
-    migrateFromRemote: function(){
+    syncFromRemote: function(){
       if(!RO.Storage.available || !RO.Sync || !RO.Sync.available) return Promise.resolve(false);
       var keys = RO.Constants.STORAGE_KEYS;
-      return RO.Storage._withStore('readonly', function(store){ return store.get(keys.TASKS); })
-        .then(function(record){
-          if(record) return false; // local already has data, skip
-
+      return RO.Storage.load(RO.Storage.metaKey, {})
+        .then(function(localMeta){
           return RO.Sync.pullAll().then(function(remote){
-            if(!remote.tasks && !remote.categories && !remote.projects && !remote.appState) return false;
-
             var jobs = [];
-            if(remote.tasks)      jobs.push(RO.Storage.save(keys.TASKS,      remote.tasks));
-            if(remote.categories) jobs.push(RO.Storage.save(keys.CATEGORIES, remote.categories));
-            if(remote.projects)   jobs.push(RO.Storage.save(keys.PROJECTS,   remote.projects));
-            if(remote.appState)   jobs.push(RO.Storage.save(keys.APP_STATE,  remote.appState));
+            var changed = false;
+            Object.keys(keys).forEach(function(name){
+              var key = keys[name];
+              var entry = remote[key];
+              if(!entry || typeof entry.value === 'undefined') return;
+              var remoteTime = entry.updatedAt || 0;
+              var localTime  = localMeta[key] || 0;
+              if(remoteTime > localTime){
+                jobs.push(RO.Storage.save(key, entry.value));
+                localMeta[key] = remoteTime;
+                changed = true;
+              }
+            });
+            if(!changed) return false;
+            jobs.push(RO.Storage.save(RO.Storage.metaKey, localMeta));
             return Promise.all(jobs).then(function(){
-              console.log('[Storage] Pulled data from Supabase → IndexedDB');
+              console.log('[Storage] Pulled newer data from Supabase → IndexedDB');
               return true;
             });
           });
         })
         .catch(function(e){
-          console.error('[Storage] migrateFromRemote failed', e);
+          console.error('[Storage] syncFromRemote failed', e);
           return false;
         });
     }

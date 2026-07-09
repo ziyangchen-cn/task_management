@@ -17,7 +17,7 @@
           return RO.Storage.migrateFromLocalStorage();
         })
         .then(function(){
-          return RO.Storage.migrateFromRemote();
+          return RO.Storage.syncFromRemote();
         })
         .then(function(){
           return RO.Storage.loadAll();
@@ -31,6 +31,14 @@
             lastMigration: null,
             projectManagementUI: { expandedCategories: [] }
           };
+
+          // Snapshot before running the migration loops below, so we can tell
+          // whether any of them actually changed anything. Every boot used to
+          // unconditionally re-save (and, with cloud sync, re-push) even when
+          // nothing needed migrating -- harmless on its own, but it meant a
+          // plain "open the app" raced against real edits made from another
+          // device and could win the "which copy is newer" comparison.
+          var beforeMigration = JSON.stringify({ tasks: RO.Data.tasks, categories: RO.Data.categories, projects: RO.Data.projects, appState: RO.Data.appState });
 
           if(!RO.Data.appState.dailySummaries) RO.Data.appState.dailySummaries = {};
           if(!RO.Data.appState.todayOrders)   RO.Data.appState.todayOrders   = {};
@@ -105,7 +113,8 @@
             if(typeof t.someday === 'undefined') t.someday = false;
           });
 
-          RO.Data.save(); // persist normalizations (fire-and-forget)
+          var afterMigration = JSON.stringify({ tasks: RO.Data.tasks, categories: RO.Data.categories, projects: RO.Data.projects, appState: RO.Data.appState });
+          if(afterMigration !== beforeMigration) RO.Data.save(); // persist normalizations only if something actually changed (fire-and-forget)
         });
     },
 

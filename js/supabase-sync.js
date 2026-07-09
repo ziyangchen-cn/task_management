@@ -13,6 +13,7 @@
 
   RO.Sync = {
     available: !!client,
+    client: client, // shared client instance, reused by js/supabase-auth.js
 
     push: function(key, value){
       if(!client) return Promise.resolve();

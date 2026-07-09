@@ -11,6 +11,15 @@
   <link rel="stylesheet" href="css/main.css" />
 </head>
 <body>
+  <div id="authGate" class="auth-gate hidden">
+    <form id="authGateForm" class="auth-gate-form">
+      <h2>Research OS</h2>
+      <input type="email" id="authGateEmail" placeholder="Email" autocomplete="username" required />
+      <input type="password" id="authGatePassword" placeholder="Password" autocomplete="current-password" required />
+      <button type="submit" id="authGateSubmit">Sign in</button>
+      <div id="authGateError" class="auth-gate-error"></div>
+    </form>
+  </div>
   <header class="topbar">
     <div class="brand">Research OS</div>
     <div class="version">v1.0</div>
@@ -156,6 +165,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
   <script src="js/supabase-config.js" defer></script>
   <script src="js/supabase-sync.js" defer></script>
+  <script src="js/supabase-auth.js" defer></script>
   <script src="js/constants.js" defer></script>
   <script src="js/dateUtils.js" defer></script>
   <script src="js/storage.js" defer></script>

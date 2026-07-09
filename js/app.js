@@ -17,9 +17,15 @@
       if(RO.Backup) RO.Backup.autoBackupIfDue();
     }
 
-    // RO.Data.init() opens IndexedDB, migrates localStorage data if needed,
-    // loads all data into memory, then we start the ImageStore chain.
-    RO.Data.init()
+    // If Supabase is configured, wait for a signed-in session first (shows a
+    // login form if needed) so the cloud sync layer's RLS policies work.
+    // With no Supabase config, RO.Auth.ready() resolves immediately.
+    (RO.Auth ? RO.Auth.ready() : Promise.resolve())
+      .then(function(){
+        // RO.Data.init() opens IndexedDB, migrates localStorage data if needed,
+        // loads all data into memory, then we start the ImageStore chain.
+        return RO.Data.init();
+      })
       .then(function(){
         if(RO.ImageStore) return RO.ImageStore.init();
       })

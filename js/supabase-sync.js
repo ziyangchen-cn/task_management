@@ -15,12 +15,22 @@
     available: !!client,
     client: client, // shared client instance, reused by js/supabase-auth.js
 
+    // Last push result, shown in the topbar by RO.UI.renderSyncStatus (see
+    // ui-core.js) so you can visually confirm a save actually reached
+    // Supabase, instead of having to open the dashboard every time.
+    lastSyncAt: null,
+    lastSyncOk: null,
+
+    /** Returns Promise<boolean> -- true if this key's upsert succeeded. */
     push: function(key, value){
-      if(!client) return Promise.resolve();
+      if(!client) return Promise.resolve(true);
       return client.from('kv_store')
         .upsert({ key: key, value: value, updated_at: new Date().toISOString() }, { onConflict: 'user_id,key' })
-        .then(function(res){ if(res.error) console.error('[Sync] push failed', key, res.error); })
-        .catch(function(e){ console.error('[Sync] push error', key, e); });
+        .then(function(res){
+          if(res.error){ console.error('[Sync] push failed', key, res.error); return false; }
+          return true;
+        })
+        .catch(function(e){ console.error('[Sync] push error', key, e); return false; });
     },
 
     pushAll: function(state){
@@ -31,7 +41,11 @@
         RO.Sync.push(keys.CATEGORIES, state.categories),
         RO.Sync.push(keys.PROJECTS,   state.projects),
         RO.Sync.push(keys.APP_STATE,  state.appState)
-      ]);
+      ]).then(function(results){
+        RO.Sync.lastSyncAt = Date.now();
+        RO.Sync.lastSyncOk = results.every(function(ok){ return ok; });
+        if(RO.UI && RO.UI.renderSyncStatus) RO.UI.renderSyncStatus();
+      });
     },
 
     pull: function(key){

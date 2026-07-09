@@ -104,6 +104,18 @@
     if(dp) dp.value = RO.Data.appState.currentDate;
   };
 
+  /** Small topbar indicator so you can see, at a glance, whether the last
+   *  save actually reached Supabase -- no need to open the dashboard. Blank
+   *  when cloud sync isn't configured (pure local mode, unchanged from before). */
+  RO.UI.renderSyncStatus = function(){
+    var el = document.getElementById('syncStatus');
+    if(!el) return;
+    if(!RO.Sync || !RO.Sync.available){ el.textContent = ''; return; }
+    if(!RO.Sync.lastSyncAt){ el.textContent = '☁️ 等待同步'; return; }
+    var time = new Date(RO.Sync.lastSyncAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    el.textContent = (RO.Sync.lastSyncOk ? '☁️ 已同步 ' : '⚠️ 同步失败 ') + time;
+  };
+
   RO.UI.openImagePreview = function(title, imageDataUrl){
     var modal = document.getElementById('imagePreviewModal'); if(!modal) return;
     document.getElementById('imagePreviewTitle').textContent = title || 'Image';

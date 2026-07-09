@@ -3,6 +3,7 @@
 body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-height:1.4;color:#111;background:#fff}
 .topbar{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid #eee;background:#fafafa}
 .brand,.version{font-size:19px}
+.sync-status{font-size:13px;color:#888;margin-left:12px}
 .container{display:flex;height:calc(100vh - 48px)}
 .column{flex:1;padding:16px;overflow:auto}
 .column.drop-target{outline:2px dashed #7aa7d9;outline-offset:-8px;background:rgba(122,167,217,0.08)}

@@ -1,0 +1,18 @@
+{
+  "categories": [
+    {"id":"CFC","name":"CFC","color":"#cfe8ff","archived":false},
+    {"id":"ISO","name":"ISO","color":"#d7f8d8","archived":false},
+    {"id":"Paper","name":"Paper","color":"#ecd7ff","archived":false}
+  ],
+  "projects": [
+    {"id":"opt-bias","name":"opt-bias","categoryId":"CFC","archived":false},
+    {"id":"merge","name":"merge","categoryId":"CFC","archived":false},
+    {"id":"tube","name":"tube","categoryId":"ISO","archived":false},
+    {"id":"SO-paper","name":"SO paper","categoryId":"Paper","archived":false}
+  ],
+  "tasks": [
+    {"id":"t1","description":"opt-bias","projectId":"opt-bias","date":"2026-06-01","completed":false,"note":"Compare fixed and blind q","createdAt":1620000000000,"updatedAt":1620000000000},
+    {"id":"t2","description":"tube","projectId":"tube","date":"2026-06-02","completed":false,"note":"Check interpolation","createdAt":1620000000000,"updatedAt":1620000000000},
+    {"id":"t3","description":"Rewrite introduction","projectId":"SO-paper","date":null,"completed":false,"note":"","createdAt":1620000000000,"updatedAt":1620000000000}
+  ]
+}

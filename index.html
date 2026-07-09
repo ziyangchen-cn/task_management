@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Research OS</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#2f6fed" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="js/vendor/katex/katex.min.css" />
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Research OS</div>
+    <div class="version">v1.0</div>
+    <div class="top-actions">
+      <button id="topTodayBtn">📅 Today</button>
+      <button id="projectsBtn">📂 Projects</button>
+      <button id="reviewBtn">📊 Review</button>
+      <button id="backupBtn">💾 Backup</button>
+      <input type="file" id="backupImportInput" accept="application/json,.json" class="hidden" />
+    </div>
+  </header>
+  <main class="container">
+    <section class="column today">
+      <div class="datebar">
+        <button id="prevDay">&lt;</button>
+        <button id="dateDisplay">2026-06-02</button>
+        <button id="nextDay">&gt;</button>
+        <button id="todayBtn">Today</button>
+        <input type="date" id="datePicker" />
+      </div>
+      <div id="todayStatus" class="today-status"></div>
+      <div id="todaySummary" class="today-summary"></div>
+      <div id="todayList" class="task-list"></div>
+    </section>
+    <section class="column inbox">
+      <div class="inbox-header">
+        <h2>Inbox</h2>
+        <button id="addInboxBtn">+ Add Task</button>
+      </div>
+      <div id="inboxList" class="task-list"></div>
+    </section>
+  </main>
+
+  <div id="editModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="modalTitle">Edit Task</h3>
+      <label>Title:
+        <input id="taskTitle" />
+      </label>
+      <label>Category:
+        <select id="taskCategory"></select>
+      </label>
+      <label>Project:
+        <select id="taskProject"></select>
+      </label>
+      <label>Date:
+        <input type="date" id="taskDate" />
+      </label>
+      <div class="modal-actions">
+        <button id="cancelEdit">Cancel</button>
+        <button id="saveEdit">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Manage Projects</h3>
+      <div id="categoriesList" class="categories-tree"></div>
+      <div class="modal-actions">
+        <button id="closeSettings">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="resultModalTitle">Important Result</h3>
+      <label>Title:
+        <input id="resultTitle" />
+      </label>
+      <label>Description:
+        <textarea id="resultDescription" rows="4"></textarea>
+      </label>
+      <label>Image:
+        <input type="file" id="resultImage" accept="image/*" />
+      </label>
+      <div id="resultImageStatus" class="result-image-status"></div>
+      <label id="removeResultImageWrap" class="result-remove-image hidden">
+        <input type="checkbox" id="removeResultImage" />
+        Remove existing image
+      </label>
+      <div class="modal-actions">
+        <button id="cancelResultEdit" type="button">Cancel</button>
+        <button id="saveResultEdit" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generic single/multi-field input modal -->
+  <div id="genericInputModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="genericInputTitle"></h3>
+      <div id="genericInputFields"></div>
+      <div class="modal-actions">
+        <button id="genericInputCancel" type="button">Cancel</button>
+        <button id="genericInputSave" type="button">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generic confirm / alert modal -->
+  <div id="genericConfirmModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="genericConfirmTitle"></h3>
+      <p id="genericConfirmMessage"></p>
+      <div id="genericConfirmActions" class="modal-actions"></div>
+    </div>
+  </div>
+
+  <div id="imagePreviewModal" class="modal hidden">
+    <div class="modal-content image-preview-content">
+      <h3 id="imagePreviewTitle">Image</h3>
+      <img id="imagePreviewImg" alt="Important result image" />
+      <div class="modal-actions">
+        <button id="closeImagePreview">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <section id="projectsPage" class="projects-page hidden">
+    <div class="projects-container">
+      <aside class="projects-sidebar">
+        <div id="projectsSidebarCategories"></div>
+      </aside>
+      <div class="projects-content">
+        <div class="projects-toolbar">
+          <h3 id="projectsTitle">Projects</h3>
+        </div>
+        <div id="projectDetails" class="project-details">Select a project from the left.</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="reviewPage" class="review-page hidden">
+    <div class="review-content">
+      <h3>Weekly Review</h3>
+      <div id="weeklyReviewMeta" class="review-meta"></div>
+      <div id="weeklyReviewList" class="review-list"></div>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" defer></script>
+  <script src="js/supabase-config.js" defer></script>
+  <script src="js/supabase-sync.js" defer></script>
+  <script src="js/constants.js" defer></script>
+  <script src="js/dateUtils.js" defer></script>
+  <script src="js/storage.js" defer></script>
+  <script src="js/data.js" defer></script>
+  <script src="js/imageStore.js" defer></script>
+  <script src="js/migration.js" defer></script>
+  <script src="js/vendor/marked.min.js" defer></script>
+  <script src="js/vendor/katex/katex.min.js" defer></script>
+  <script src="js/vendor/katex/auto-render.min.js" defer></script>
+  <script src="js/ui-core.js" defer></script>
+  <script src="js/ui-tasks.js" defer></script>
+  <script src="js/ui-projects.js" defer></script>
+  <script src="js/ui-derivations.js" defer></script>
+  <script src="js/backup.js" defer></script>
+  <script src="js/handlers.js" defer></script>
+  <script src="js/app.js" defer></script>
+  <script>
+    // Register service worker for PWA installability + offline app-shell cache.
+    // Only works over http(s), so it silently no-ops when opened via file://.
+    if('serviceWorker' in navigator && location.protocol.indexOf('http') === 0){
+      window.addEventListener('load', function(){
+        navigator.serviceWorker.register('sw.js').catch(function(e){
+          console.warn('[PWA] service worker registration failed', e);
+        });
+      });
+    }
+  </script>
+</body>
+</html>

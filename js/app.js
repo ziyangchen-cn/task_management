@@ -1,0 +1,42 @@
+(function(){
+  window.RO = window.RO || {};
+  document.addEventListener('DOMContentLoaded', function(){
+
+    function bootUI(){
+      RO.Migration.run();
+      if(RO.UI && RO.Handlers){
+        RO.UI.renderAll = RO.UI.renderAll || function(){ RO.UI.renderDate(); RO.UI.renderToday(); RO.UI.renderInbox(); };
+        RO.UI.initGenericModals();
+        RO.UI.renderAll();
+        RO.Handlers.attachHandlers();
+        if(window.location.hash === '#projects') RO.UI.openProjectsPage();
+        else if(window.location.hash === '#review') RO.UI.openReviewPage();
+      }
+      // Safety net independent of browser storage: once per day, after noon,
+      // silently drop a JSON snapshot into Downloads. No-ops if already done today.
+      if(RO.Backup) RO.Backup.autoBackupIfDue();
+    }
+
+    // RO.Data.init() opens IndexedDB, migrates localStorage data if needed,
+    // loads all data into memory, then we start the ImageStore chain.
+    RO.Data.init()
+      .then(function(){
+        if(RO.ImageStore) return RO.ImageStore.init();
+      })
+      .then(function(){
+        if(RO.ImageStore && RO.ImageStore.available) return RO.ImageStore.migrateProjectResultImages();
+      })
+      .then(function(){
+        if(RO.ImageStore && RO.ImageStore.available) return RO.ImageStore.migrateCategoryDerivationImages();
+      })
+      .then(function(){
+        if(RO.ImageStore && RO.ImageStore.available) return RO.ImageStore.cleanupOrphans();
+      })
+      .then(bootUI)
+      .catch(function(e){
+        console.error('Boot failed', e);
+        bootUI();
+      });
+
+  });
+})();

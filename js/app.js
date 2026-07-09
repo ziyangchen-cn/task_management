@@ -9,8 +9,16 @@
         RO.UI.initGenericModals();
         RO.UI.renderAll();
         RO.Handlers.attachHandlers();
-        if(window.location.hash === '#projects') RO.UI.openProjectsPage();
-        else if(window.location.hash === '#review') RO.UI.openReviewPage();
+        // #projects alone opens the page with no project selected (falls back
+        // to the first one). #projects/<id> reopens the exact project that
+        // was on screen before the refresh (see ui-projects.js safeReplaceHash calls).
+        var hash = window.location.hash;
+        if(hash.indexOf('#projects') === 0){
+          var projectId = hash.indexOf('#projects/') === 0 ? decodeURIComponent(hash.slice('#projects/'.length)) : undefined;
+          RO.UI.openProjectsPage(projectId);
+        } else if(hash === '#review'){
+          RO.UI.openReviewPage();
+        }
       }
       // Safety net independent of browser storage: once per day, after noon,
       // silently drop a JSON snapshot into Downloads. No-ops if already done today.

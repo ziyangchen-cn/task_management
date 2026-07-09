@@ -67,7 +67,7 @@
   }
 
   RO.UI.openProjectsPage = function(projectId){
-    safeReplaceHash('#projects');
+    safeReplaceHash(projectId ? ('#projects/' + encodeURIComponent(projectId)) : '#projects');
     var main = document.querySelector('main.container');
     if(main){ main.classList.add('hidden'); main.style.display = 'none'; }
     var reviewPage = document.getElementById('reviewPage');
@@ -317,6 +317,10 @@
     var proj = RO.Data.projects.find(function(p){ return p.id === projId; });
     if(!proj){ details.textContent = 'Project not found'; return; }
     details.innerHTML = '';
+    // Keep the URL in sync with whichever project is actually on screen, so a
+    // refresh reopens this same project instead of falling back to the first
+    // one in list order (see RO.UI.openProjectsPage / app.js boot).
+    safeReplaceHash('#projects/' + encodeURIComponent(projId));
 
     function formatTaskDate(ts){
       if(!ts) return '';

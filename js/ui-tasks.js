@@ -83,6 +83,17 @@
     // which was confusing and not what was wanted here.
     var logWrap = document.createElement('div'); logWrap.className = 'task-log';
 
+    // A plain <textarea> can't color individual substrings, so the marker
+    // highlighting (# ! * [ ]) is drawn by a read-only div stacked exactly on
+    // top of it (see .task-log-highlight in css/main.css -- same padding/
+    // font/border so the two line up). The textarea itself stays the real,
+    // fully-functional input (typing, IME, selection, Tab handling all
+    // untouched); only its own text is made invisible (color:transparent)
+    // so you see the highlighted copy through it instead of double text.
+    var logHighlight = document.createElement('div');
+    logHighlight.className = 'task-log-highlight';
+    logHighlight.setAttribute('aria-hidden', 'true');
+
     var logInput = document.createElement('textarea');
     logInput.className = 'task-log-input auto-height';
     logInput.rows = 1;
@@ -90,6 +101,10 @@
     logInput.placeholder = '做了什么 / #进展 / !坑 / *结论 / [ ]子任务';
     logInput.dataset.ignoreTaskAction = 'true';
     logInput.addEventListener('click', function(e){ e.stopPropagation(); });
+
+    function syncLogHighlight(){
+      RO.UI.appendTextWithHashHighlight(logHighlight, logInput.value);
+    }
     // The task row is draggable={true} for reordering (see handlers.js
     // dragstart), and a browser quirk means that alone can swallow a
     // click-and-drag gesture that starts inside a nested textarea -- the
@@ -105,7 +120,7 @@
         document.removeEventListener('mouseup', restore);
       });
     });
-    logInput.addEventListener('input', function(){ RO.UI.fitTextarea(logInput); });
+    logInput.addEventListener('input', function(){ RO.UI.fitTextarea(logInput); syncLogHighlight(); });
     logInput.addEventListener('keydown', function(e){
       if(e.key !== 'Tab') return;
       e.preventDefault();
@@ -114,6 +129,7 @@
       logInput.value = logInput.value.slice(0, start) + '\t' + logInput.value.slice(end);
       logInput.selectionStart = logInput.selectionEnd = start + 1;
       RO.UI.fitTextarea(logInput);
+      syncLogHighlight();
     });
     logInput.addEventListener('blur', function(){
       if(logInput.value !== (task.log || '')){
@@ -122,7 +138,9 @@
       }
     });
 
+    syncLogHighlight();
     setTimeout(function(){ RO.UI.fitTextarea(logInput); }, 0);
+    logWrap.appendChild(logHighlight);
     logWrap.appendChild(logInput);
     row.appendChild(logWrap);
 

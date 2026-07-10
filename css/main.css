@@ -38,13 +38,23 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-he
 .project-link{border:none;background:rgba(255,255,255,0.35);color:#1f5f8f;text-decoration:underline;padding:1px 4px;border-radius:3px;font:inherit;cursor:pointer}
 .project-link:hover{background:rgba(255,255,255,0.6)}
 .task-log{flex:0 1 34%;min-width:180px;position:relative}
-.task-log-input{min-height:26px;overflow:hidden;resize:vertical;background:rgba(255,255,255,0.2);font-size:16px;line-height:1.35;margin-top:0;padding:2px 5px;border:1px solid transparent;position:relative;z-index:1;color:transparent;caret-color:#111;box-sizing:border-box}
+.task-log-input{min-height:26px;overflow:hidden;resize:vertical;background:rgba(255,255,255,0.2);font-family:inherit;font-size:16px;font-weight:normal;line-height:1.35;margin-top:0;padding:2px 5px;border:1px solid transparent;position:relative;z-index:1;color:transparent;caret-color:#111;box-sizing:border-box}
 .task-log-input:focus{background:rgba(255,255,255,0.65);border-color:#ccc;outline:2px solid rgba(0,0,0,0.06)}
 /* Sits exactly on top of .task-log-input (same font/padding/border) and shows
    the colored marker text -- the textarea's own text is transparent, so this
    is what you actually see. pointer-events:none lets clicks/drags pass
    straight through to the real textarea underneath. */
-.task-log-highlight{position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;pointer-events:none;font-size:16px;line-height:1.35;padding:2px 5px;border:1px solid transparent;box-sizing:border-box;white-space:pre-wrap;word-wrap:break-word;overflow:hidden;color:#111}
+.task-log-highlight{position:absolute;top:0;left:0;right:0;bottom:0;z-index:2;pointer-events:none;font-family:inherit;font-size:16px;line-height:1.35;padding:2px 5px;border:1px solid transparent;box-sizing:border-box;white-space:pre-wrap;word-wrap:break-word;overflow:hidden;color:#111}
+/* Bold marker styling (below) would make marked text wider than the plain-
+   weight text in the real textarea underneath, drifting the visible text
+   away from the actual cursor position line by line. Font-weight is forced
+   back to normal here, in the overlay only -- the same classes stay bold in
+   read-only views (Project page, Weekly Review) where there's no cursor to
+   misalign with. */
+.task-log-highlight .log-bug-highlight,
+.task-log-highlight .log-progress-highlight,
+.task-log-highlight .log-conclusion-highlight,
+.task-log-highlight .log-subtask-highlight{font-weight:normal}
 .task.completed{border-color:#ddd;color:#777}
 .task.completed.starred{border-left-color:#d8c58b;box-shadow:none}
 .task.completed .description{text-decoration:line-through;color:#777}

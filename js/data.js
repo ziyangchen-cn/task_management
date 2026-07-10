@@ -182,6 +182,21 @@
       return entry;
     },
 
+    /** Edit an existing log entry's text in place (fixing a typo, refining a
+     *  conclusion after the fact) -- unlike addLogEntry, this replaces rather
+     *  than appends. Returns null if the task/entry isn't found. */
+    updateLogEntry: function(taskId, entryId, text){
+      var t = RO.Data.tasks.find(function(x){ return x.id === taskId; });
+      if(!t || !Array.isArray(t.log)) return null;
+      var entry = t.log.find(function(e){ return e.id === entryId; });
+      if(!entry) return null;
+      entry.text = text;
+      entry.updatedAt = Date.now();
+      t.updatedAt = Date.now();
+      RO.Data.save();
+      return entry;
+    },
+
     /** Find the most recent conclusion (a `*`-marked line) across a task's log,
      *  newest entry first. Returns '' if the task has no conclusion yet. */
     getLatestConclusion: function(task){

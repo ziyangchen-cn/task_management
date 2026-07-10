@@ -4,6 +4,7 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-he
 .topbar{height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;border-bottom:1px solid #eee;background:#fafafa}
 .brand,.version{font-size:19px}
 .sync-status{font-size:13px;color:#888;margin-left:12px}
+.custom-tooltip{position:fixed;z-index:9999;background:#fff;color:#d32f2f;font-size:18px;font-weight:700;padding:8px 12px;border-radius:6px;border:1px solid #eee;box-shadow:0 2px 10px rgba(0,0,0,0.15);max-width:320px;pointer-events:none;white-space:pre-wrap}
 .container{display:flex;height:calc(100vh - 48px)}
 .column{flex:1;padding:16px;overflow:auto}
 .column.drop-target{outline:2px dashed #7aa7d9;outline-offset:-8px;background:rgba(122,167,217,0.08)}
@@ -41,8 +42,11 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-he
 .task-log-display:hover{background:rgba(255,255,255,0.35);border-color:rgba(0,0,0,0.08)}
 .task-log-display.empty{color:#aaa;font-style:italic}
 .task-log-history{max-height:160px;overflow-y:auto;margin-bottom:4px}
-.task-log-entry{padding:3px 5px;border-bottom:1px dashed #eee;white-space:pre-wrap}
+.task-log-entry{padding:3px 5px;border-bottom:1px dashed #eee}
 .task-log-date{font-size:12px;color:#999}
+.task-log-entry-input{width:100%;min-height:22px;overflow:hidden;resize:none;border:1px solid transparent;background:transparent;font-size:16px;line-height:1.35;font-family:inherit;padding:1px 3px;border-radius:3px}
+.task-log-entry-input:hover{background:rgba(0,0,0,0.03)}
+.task-log-entry-input:focus{background:#fff;border-color:#ccc;outline:2px solid rgba(0,0,0,0.06)}
 .task-log-input{min-height:26px;overflow:hidden;resize:vertical;background:rgba(255,255,255,0.2);font-size:16px;line-height:1.35;margin-top:0;padding:2px 5px;border-color:transparent}
 .task-log-input:focus{background:rgba(255,255,255,0.65);border-color:#ccc;outline:2px solid rgba(0,0,0,0.06)}
 .task.completed{border-color:#ddd;color:#777}
@@ -52,6 +56,7 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-he
 .log-bug-highlight{color:#c62828;font-weight:700}
 .log-progress-highlight{color:#2e7d32;font-weight:600}
 .log-conclusion-highlight{color:#7c3aed;font-weight:700}
+.log-subtask-highlight{color:#1565c0;font-weight:700}
 .task.completed .project-link,.task.completed .task-log-input,.task.completed .task-log-display,.task.completed .task-star{opacity:0.65}
 .inbox-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .inbox-table{width:100%;border-collapse:collapse}

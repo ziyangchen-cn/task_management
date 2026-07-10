@@ -6,27 +6,46 @@
   /* ── Utilities ─────────────────────────────────────────────── */
 
   // Marker -> CSS class for inline log highlighting.
-  //   * conclusion (purple bold), # progress (green), ! bug/blocker (red bold)
+  //   * conclusion (purple bold), # progress (green), ! bug/blocker (red bold),
+  //   [ ] subtask (blue bold)
   // A marker colors text from its own position up to the next marker (or end of
   // line). Markers do NOT carry over across lines — each line is independent,
   // so a multi-line bug/conclusion needs the marker repeated on every line.
-  var LOG_MARKER_CLASS = { '*': 'log-conclusion-highlight', '#': 'log-progress-highlight', '!': 'log-bug-highlight' };
+  // Sorted longest-first so a multi-character marker like "[ ]" is matched
+  // before any of its individual characters could be mistaken for something else.
+  var LOG_MARKERS = [
+    { marker: '[ ]', className: 'log-subtask-highlight' },
+    { marker: '*',   className: 'log-conclusion-highlight' },
+    { marker: '#',   className: 'log-progress-highlight' },
+    { marker: '!',   className: 'log-bug-highlight' }
+  ].sort(function(a, b){ return b.marker.length - a.marker.length; });
+
+  function findMarkerAt(line, i){
+    for(var m = 0; m < LOG_MARKERS.length; m++){
+      var entry = LOG_MARKERS[m];
+      if(line.substr(i, entry.marker.length) === entry.marker) return entry;
+    }
+    return null;
+  }
 
   function appendLineWithMarkers(el, line){
-    var positions = [];
-    for(var i = 0; i < line.length; i++){
-      if(LOG_MARKER_CLASS.hasOwnProperty(line[i])) positions.push(i);
+    var matches = []; // { pos, className }
+    var i = 0;
+    while(i < line.length){
+      var found = findMarkerAt(line, i);
+      if(found){ matches.push({ pos: i, className: found.className }); i += found.marker.length; }
+      else{ i++; }
     }
-    if(positions.length === 0){
+    if(matches.length === 0){
       el.appendChild(document.createTextNode(line));
       return;
     }
-    if(positions[0] > 0) el.appendChild(document.createTextNode(line.slice(0, positions[0])));
-    positions.forEach(function(pos, idx){
-      var end = (idx + 1 < positions.length) ? positions[idx + 1] : line.length;
+    if(matches[0].pos > 0) el.appendChild(document.createTextNode(line.slice(0, matches[0].pos)));
+    matches.forEach(function(match, idx){
+      var end = (idx + 1 < matches.length) ? matches[idx + 1].pos : line.length;
       var span = document.createElement('span');
-      span.className = LOG_MARKER_CLASS[line[pos]];
-      span.textContent = line.slice(pos, end);
+      span.className = match.className;
+      span.textContent = line.slice(match.pos, end);
       el.appendChild(span);
     });
   }
@@ -102,6 +121,29 @@
     if(dd) dd.textContent = RO.Data.appState.currentDate;
     var dp = document.getElementById('datePicker');
     if(dp) dp.value = RO.Data.appState.currentDate;
+  };
+
+  /** Custom-styled hover tooltip (see .custom-tooltip in main.css), used
+   *  instead of the native `title` attribute -- the browser's built-in
+   *  tooltip can't be restyled at all (no color/font/size control). getText
+   *  can be a string or a function, so the text stays current even if the
+   *  underlying data changes between hovers. */
+  RO.UI.attachCustomTooltip = function(el, getText){
+    var tip = null;
+    el.addEventListener('mouseenter', function(){
+      var text = typeof getText === 'function' ? getText() : getText;
+      if(!text) return;
+      tip = document.createElement('div');
+      tip.className = 'custom-tooltip';
+      tip.textContent = text;
+      document.body.appendChild(tip);
+      var rect = el.getBoundingClientRect();
+      tip.style.left = rect.left + 'px';
+      tip.style.top  = (rect.bottom + 6) + 'px';
+    });
+    el.addEventListener('mouseleave', function(){
+      if(tip){ tip.remove(); tip = null; }
+    });
   };
 
   /** Small topbar indicator so you can see, at a glance, whether the last

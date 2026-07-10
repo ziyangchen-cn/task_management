@@ -57,8 +57,10 @@
       projectLink.type = 'button';
       projectLink.className = 'project-link';
       projectLink.textContent = displayParts.join(' · ');
-      // Hover reminder of this project's goal, without cluttering the Today list
-      if(proj.description) projectLink.title = '目标：' + proj.description;
+      // Hover reminder of this project's goal, without cluttering the Today list.
+      // Custom-styled tooltip (see RO.UI.attachCustomTooltip) instead of the
+      // native `title` attribute, which can't be restyled.
+      if(proj.description) RO.UI.attachCustomTooltip(projectLink, '目标：' + proj.description);
       projectLink.onclick = function(e){
         e.stopPropagation();
         RO.UI.openProjectsPage(proj.id);
@@ -89,7 +91,7 @@
     var logInput = document.createElement('textarea');
     logInput.className = 'task-log-input auto-height hidden';
     logInput.rows = 1;
-    logInput.placeholder = '新记录：做了什么 / #进展 / !坑 / *结论';
+    logInput.placeholder = '新记录：做了什么 / #进展 / !坑 / *结论 / [ ]子任务';
     logInput.dataset.ignoreTaskAction = 'true';
 
     function latestLogEntry(){
@@ -105,19 +107,52 @@
       else logDisplay.textContent = '点击记录进展 / 坑 / 结论';
     }
 
+    // Each past entry is its own small textarea, editable in place and saved
+    // on blur -- log entries are no longer read-only once written.
+    function makeLogEntryRow(entry){
+      var item = document.createElement('div'); item.className = 'task-log-entry';
+      var date = document.createElement('div'); date.className = 'task-log-date';
+      date.textContent = RO.UI.formatProjectDate(entry.createdAt);
+      var edit = document.createElement('textarea');
+      edit.className = 'task-log-entry-input auto-height';
+      edit.rows = 1;
+      edit.value = entry.text;
+      edit.addEventListener('click', function(e){ e.stopPropagation(); });
+      edit.addEventListener('input', function(){ RO.UI.fitTextarea(edit); });
+      edit.addEventListener('blur', function(){
+        if(edit.value !== entry.text && edit.value.trim()){
+          RO.Data.updateLogEntry(task.id, entry.id, edit.value);
+          entry.text = edit.value;
+        }
+      });
+      item.appendChild(date); item.appendChild(edit);
+      setTimeout(function(){ RO.UI.fitTextarea(edit); }, 0);
+      return item;
+    }
+
     function renderLogHistory(){
       logHistory.innerHTML = '';
-      // history shows everything except the latest entry, which stays visible
-      // in logDisplay once the editor collapses again
-      (task.log || []).slice(0, -1).forEach(function(entry){
-        var item = document.createElement('div'); item.className = 'task-log-entry';
-        var date = document.createElement('div'); date.className = 'task-log-date';
-        date.textContent = RO.UI.formatProjectDate(entry.createdAt);
-        var body = document.createElement('div');
-        RO.UI.appendTextWithHashHighlight(body, entry.text);
-        item.appendChild(date); item.appendChild(body);
-        logHistory.appendChild(item);
+      // Shows every entry, including the latest -- it used to be excluded here
+      // (staying only in logDisplay, which gets hidden while editing), which
+      // made the most recent entry silently vanish from view once expanded.
+      (task.log || []).forEach(function(entry){
+        logHistory.appendChild(makeLogEntryRow(entry));
       });
+    }
+
+    // Editor stays open while you click between entries / the new-entry box;
+    // it only collapses back to the compact display when you click elsewhere
+    // on the page (same outside-click pattern as RO.UI.positionMenu's menus).
+    var outsideClickHandler = null;
+    function attachOutsideClick(){
+      outsideClickHandler = function(e){
+        if(logWrap.contains(e.target)) return;
+        showLogDisplayMode();
+      };
+      document.addEventListener('click', outsideClickHandler);
+    }
+    function detachOutsideClick(){
+      if(outsideClickHandler){ document.removeEventListener('click', outsideClickHandler); outsideClickHandler = null; }
     }
 
     function showLogEditor(){
@@ -128,12 +163,14 @@
       logInput.value = '';
       RO.UI.fitTextarea(logInput);
       logInput.focus();
+      setTimeout(attachOutsideClick, 0); // deferred so this same click doesn't immediately close it
     }
     function showLogDisplayMode(){
       renderLogDisplay();
       logHistory.classList.add('hidden');
       logInput.classList.add('hidden');
       logDisplay.classList.remove('hidden');
+      detachOutsideClick();
     }
 
     logDisplay.addEventListener('click', function(e){ e.stopPropagation(); showLogEditor(); });
@@ -150,8 +187,12 @@
       RO.UI.fitTextarea(logInput);
     });
     logInput.addEventListener('blur', function(){
-      if(logInput.value.trim()) RO.Data.addLogEntry(task.id, logInput.value);
-      showLogDisplayMode();
+      if(logInput.value.trim()){
+        RO.Data.addLogEntry(task.id, logInput.value);
+        logInput.value = '';
+        RO.UI.fitTextarea(logInput);
+        renderLogHistory(); // show the new entry immediately, editor stays open
+      }
     });
 
     renderLogDisplay();

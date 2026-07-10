@@ -147,12 +147,14 @@
   };
 
   /** Small topbar indicator so you can see, at a glance, whether the last
-   *  save actually reached Supabase -- no need to open the dashboard. Blank
-   *  when cloud sync isn't configured (pure local mode, unchanged from before). */
+   *  save actually reached Supabase -- no need to open the dashboard. Shows
+   *  "本地模式" instead of going blank when sync is off, so it's always clear
+   *  at a glance whether this session can reach Supabase at all (see
+   *  js/local-mode.js -- local launches never sync, only GitHub Pages does). */
   RO.UI.renderSyncStatus = function(){
     var el = document.getElementById('syncStatus');
     if(!el) return;
-    if(!RO.Sync || !RO.Sync.available){ el.textContent = ''; return; }
+    if(!RO.Sync || !RO.Sync.available){ el.textContent = RO.LOCAL_MODE ? '🖥️ 本地模式（不同步）' : ''; return; }
     if(!RO.Sync.lastSyncAt){ el.textContent = '☁️ 等待同步'; return; }
     var time = new Date(RO.Sync.lastSyncAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
     el.textContent = (RO.Sync.lastSyncOk ? '☁️ 已同步 ' : '⚠️ 同步失败 ') + time;

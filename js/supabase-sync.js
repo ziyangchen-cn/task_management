@@ -7,9 +7,18 @@
   // other file in the app needs to know sync exists. When RO.SUPABASE_URL /
   // RO.SUPABASE_ANON_KEY are empty (not configured yet), everything below is
   // a no-op and the app behaves exactly as before -- local IndexedDB only.
+
+  // RO.LOCAL_MODE (see js/local-mode.js) hard-disables the Supabase client
+  // at script-load time whenever the app is opened locally -- no client is
+  // ever created, so no code path in this file can push or pull, no matter
+  // what happens in the UI. Only the published GitHub Pages origin creates a
+  // real client. This replaced two earlier, weaker mechanisms in order: a
+  // checkbox (could be left unchecked by mistake -- that's exactly how test
+  // data once got pushed to the real Supabase data) and a "?test=1" URL flag
+  // (still an extra step that could be forgotten).
   var url    = window.RO.SUPABASE_URL || '';
   var anon   = window.RO.SUPABASE_ANON_KEY || '';
-  var client = (url && anon && window.supabase) ? window.supabase.createClient(url, anon) : null;
+  var client = (url && anon && window.supabase && !RO.LOCAL_MODE) ? window.supabase.createClient(url, anon) : null;
 
   RO.Sync = {
     available: !!client,

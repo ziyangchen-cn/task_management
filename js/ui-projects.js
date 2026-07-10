@@ -524,8 +524,7 @@
       metaEl.textContent = metaParts.join(' · ');
       main.appendChild(taskTitle); main.appendChild(metaEl);
       var progressEl = document.createElement('div'); progressEl.className = 'project-task-progress';
-      var latestLog = (t.log && t.log.length) ? t.log[t.log.length - 1] : null;
-      if(latestLog) RO.UI.appendTextWithHashHighlight(progressEl, latestLog.text);
+      if(t.log) RO.UI.appendTextWithHashHighlight(progressEl, t.log);
       tr.appendChild(chk); tr.appendChild(main); tr.appendChild(progressEl);
       return tr;
     }
@@ -605,9 +604,9 @@
           var titleEl = document.createElement('div'); titleEl.className = 'review-task-title'; titleEl.textContent = t.title || '';
           main.appendChild(dateEl); main.appendChild(titleEl);
           li.appendChild(main);
-          if(t.log && t.log.length){
+          if(t.log){
             var detail = document.createElement('div'); detail.className = 'review-task-detail';
-            RO.UI.appendTextWithHashHighlight(detail, t.log.map(function(entry){ return entry.text; }).join('\n'));
+            RO.UI.appendTextWithHashHighlight(detail, t.log);
             li.appendChild(detail);
           }
           ul.appendChild(li);

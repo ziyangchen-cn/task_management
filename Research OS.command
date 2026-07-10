@@ -13,8 +13,8 @@ if [ -n "$EXISTING_PID" ]; then
   sleep 1
 fi
 
-echo "正在启动 Research OS 本地服务器..."
-python3 -m http.server $PORT &
+echo "正在启动 Research OS 本地服务器（禁用缓存，保证每次刷新都是最新代码）..."
+python3 no_cache_server.py $PORT &
 SERVER_PID=$!
 sleep 1
 open "http://localhost:$PORT"

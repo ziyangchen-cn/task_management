@@ -38,14 +38,6 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-he
 .project-link{border:none;background:rgba(255,255,255,0.35);color:#1f5f8f;text-decoration:underline;padding:1px 4px;border-radius:3px;font:inherit;cursor:pointer}
 .project-link:hover{background:rgba(255,255,255,0.6)}
 .task-log{flex:0 1 34%;min-width:180px}
-.task-log-display{min-height:26px;background:rgba(255,255,255,0.2);font-size:16px;line-height:1.35;margin-top:0;padding:2px 5px;border:1px solid transparent;border-radius:4px;white-space:pre-wrap;cursor:text}
-.task-log-display:hover{background:rgba(255,255,255,0.35);border-color:rgba(0,0,0,0.08)}
-.task-log-display.empty{color:#aaa;font-style:italic}
-.task-log-history{max-height:160px;overflow-y:auto;margin-bottom:4px}
-.task-log-entry{padding:3px 5px;border-bottom:1px dashed #eee}
-.task-log-entry-input{width:100%;min-height:22px;overflow:hidden;resize:none;border:1px solid transparent;background:transparent;font-size:16px;line-height:1.35;font-family:inherit;padding:1px 3px;border-radius:3px}
-.task-log-entry-input:hover{background:rgba(0,0,0,0.03)}
-.task-log-entry-input:focus{background:#fff;border-color:#ccc;outline:2px solid rgba(0,0,0,0.06)}
 .task-log-input{min-height:26px;overflow:hidden;resize:vertical;background:rgba(255,255,255,0.2);font-size:16px;line-height:1.35;margin-top:0;padding:2px 5px;border-color:transparent}
 .task-log-input:focus{background:rgba(255,255,255,0.65);border-color:#ccc;outline:2px solid rgba(0,0,0,0.06)}
 .task.completed{border-color:#ddd;color:#777}
@@ -56,7 +48,7 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-he
 .log-progress-highlight{color:#2e7d32;font-weight:600}
 .log-conclusion-highlight{color:#7c3aed;font-weight:700}
 .log-subtask-highlight{color:#1565c0;font-weight:700}
-.task.completed .project-link,.task.completed .task-log-input,.task.completed .task-log-display,.task.completed .task-star{opacity:0.65}
+.task.completed .project-link,.task.completed .task-log-input,.task.completed .task-star{opacity:0.65}
 .inbox-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .inbox-table{width:100%;border-collapse:collapse}
 .inbox-table th,.inbox-table td{padding:8px;border-bottom:1px solid #eee;text-align:left}

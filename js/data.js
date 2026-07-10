@@ -86,23 +86,27 @@
             });
           });
 
-          // one-time migration: description/note/progress -> title + log[]
+          // one-time migration: description/note/progress -> title + log
           // (old "description" was really a title; old "note"/"progress" become
-          // the first log entry, with old progress text marked as a `#` progress line)
+          // the initial log text, with old progress text marked as a `#` progress line)
           RO.Data.tasks.forEach(function(t){
             if(typeof t.title === 'undefined'){
               t.title = t.description || '';
               var seedLines = [];
               if(t.note) seedLines.push(t.note);
               if(t.progress) seedLines.push('#' + t.progress);
-              t.log = seedLines.length
-                ? [{ id: 'log_' + (t.createdAt || Date.now()), text: seedLines.join('\n'), createdAt: t.createdAt || Date.now() }]
-                : [];
+              t.log = seedLines.join('\n');
               delete t.description;
               delete t.note;
               delete t.progress;
             }
-            if(!Array.isArray(t.log)) t.log = [];
+            // migrate the older log-entries-array format (each {id, text, createdAt})
+            // down to a single freely-editable string -- no more entry history,
+            // just "what does this task's log currently say".
+            if(Array.isArray(t.log)){
+              t.log = t.log.map(function(entry){ return entry.text || ''; }).join('\n');
+            }
+            if(typeof t.log !== 'string') t.log = '';
             if(typeof t.completedReason === 'undefined') t.completedReason = t.completed ? 'done' : null;
             if(typeof t.continuesFrom === 'undefined') t.continuesFrom = null;
             if(typeof t.rebornInto === 'undefined') t.rebornInto = null;
@@ -155,7 +159,7 @@
         completedReason: null,           // 'done' | 'reborn' | null
         continuesFrom: opt.continuesFrom || null,
         rebornInto: null,
-        log: [],
+        log: '',
         createdAt: Date.now(),
         updatedAt: Date.now(),
         completedAt: null,
@@ -168,44 +172,25 @@
       return task;
     },
 
-    /** Append one log entry to a task. text may use *()conclusion / #(progress) / !(bug)
-     *  inline markers — see ui-core.js appendTextWithHashHighlight for rendering. */
-    addLogEntry: function(taskId, text){
-      if(!text || !text.trim()) return null;
+    /** Overwrite this task's log text -- the one running, freely-editable
+     *  record (no entry history). text may use *()conclusion / #(progress) /
+     *  !(bug) / [ ](subtask) inline markers, one per line -- see ui-core.js
+     *  appendTextWithHashHighlight for rendering. */
+    updateLog: function(taskId, text){
       var t = RO.Data.tasks.find(function(x){ return x.id === taskId; });
       if(!t) return null;
-      if(!Array.isArray(t.log)) t.log = [];
-      var entry = { id: 'log_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7), text: text, createdAt: Date.now() };
-      t.log.push(entry);
+      t.log = text || '';
       t.updatedAt = Date.now();
       RO.Data.save();
-      return entry;
+      return t;
     },
 
-    /** Edit an existing log entry's text in place (fixing a typo, refining a
-     *  conclusion after the fact) -- unlike addLogEntry, this replaces rather
-     *  than appends. Returns null if the task/entry isn't found. */
-    updateLogEntry: function(taskId, entryId, text){
-      var t = RO.Data.tasks.find(function(x){ return x.id === taskId; });
-      if(!t || !Array.isArray(t.log)) return null;
-      var entry = t.log.find(function(e){ return e.id === entryId; });
-      if(!entry) return null;
-      entry.text = text;
-      entry.updatedAt = Date.now();
-      t.updatedAt = Date.now();
-      RO.Data.save();
-      return entry;
-    },
-
-    /** Find the most recent conclusion (a `*`-marked line) across a task's log,
-     *  newest entry first. Returns '' if the task has no conclusion yet. */
+    /** Find the most recent conclusion (a `*`-marked line) in a task's log,
+     *  scanning from the bottom up. Returns '' if there is no conclusion yet. */
     getLatestConclusion: function(task){
-      var log = (task && task.log) || [];
-      for(var i = log.length - 1; i >= 0; i--){
-        var lines = (log[i].text || '').split('\n');
-        for(var j = lines.length - 1; j >= 0; j--){
-          if(lines[j].trim().charAt(0) === '*') return lines[j].trim();
-        }
+      var lines = ((task && task.log) || '').split('\n');
+      for(var j = lines.length - 1; j >= 0; j--){
+        if(lines[j].trim().charAt(0) === '*') return lines[j].trim();
       }
       return '';
     },

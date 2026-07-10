@@ -1,5 +1,6 @@
 (function(){
   window.RO = window.RO || {};
+
   RO.Constants = {
     STORAGE_KEYS: {
       TASKS: 'research_os.tasks',

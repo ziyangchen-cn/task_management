@@ -9,6 +9,9 @@
         RO.UI.initGenericModals();
         RO.UI.renderAll();
         RO.Handlers.attachHandlers();
+        // Show the sync badge's initial state right away -- it otherwise only
+        // updates after a push completes, which never happens in local mode.
+        if(RO.UI.renderSyncStatus) RO.UI.renderSyncStatus();
         // #projects alone opens the page with no project selected (falls back
         // to the first one). #projects/<id> reopens the exact project that
         // was on screen before the refresh (see ui-projects.js safeReplaceHash calls).

@@ -76,105 +76,35 @@
     taskMain.appendChild(desc);
     row.appendChild(taskMain);
 
-    // log: append-only record for this task. Click the latest entry to see the
-    // full history and add a new one (做了什么 plain / #进展 / !坑 / *结论).
+    // log: ONE freely-editable text field per task (做了什么 plain / #进展 /
+    // !坑 / *结论 / [ ]子任务, one marker per line). No entry history -- just
+    // the current text, overwritten on blur. Keeping this simple on purpose:
+    // an array of entries turned into multiple textareas on screen at once,
+    // which was confusing and not what was wanted here.
     var logWrap = document.createElement('div'); logWrap.className = 'task-log';
 
-    var logDisplay = document.createElement('div');
-    logDisplay.className = 'task-log-display';
-    logDisplay.dataset.ignoreTaskAction = 'true';
-
-    var logHistory = document.createElement('div');
-    logHistory.className = 'task-log-history hidden';
-    logHistory.dataset.ignoreTaskAction = 'true';
-
     var logInput = document.createElement('textarea');
-    logInput.className = 'task-log-input auto-height hidden';
+    logInput.className = 'task-log-input auto-height';
     logInput.rows = 1;
-    logInput.placeholder = '新记录：做了什么 / #进展 / !坑 / *结论 / [ ]子任务';
+    logInput.value = task.log || '';
+    logInput.placeholder = '做了什么 / #进展 / !坑 / *结论 / [ ]子任务';
     logInput.dataset.ignoreTaskAction = 'true';
-
-    function latestLogEntry(){
-      var log = task.log || [];
-      return log.length ? log[log.length - 1] : null;
-    }
-
-    function renderLogDisplay(){
-      var latest = latestLogEntry();
-      logDisplay.innerHTML = '';
-      logDisplay.classList.toggle('empty', !latest);
-      if(latest) RO.UI.appendTextWithHashHighlight(logDisplay, latest.text);
-      else logDisplay.textContent = '点击记录进展 / 坑 / 结论';
-    }
-
-    // Each past entry is its own small textarea, editable in place and saved
-    // on blur -- log entries are no longer read-only once written. No date
-    // label; entries just sit together as one running, freely-editable log.
-    function makeLogEntryRow(entry){
-      var item = document.createElement('div'); item.className = 'task-log-entry';
-      var edit = document.createElement('textarea');
-      edit.className = 'task-log-entry-input auto-height';
-      edit.rows = 1;
-      edit.value = entry.text;
-      edit.addEventListener('click', function(e){ e.stopPropagation(); });
-      edit.addEventListener('input', function(){ RO.UI.fitTextarea(edit); });
-      edit.addEventListener('blur', function(){
-        if(edit.value !== entry.text && edit.value.trim()){
-          RO.Data.updateLogEntry(task.id, entry.id, edit.value);
-          entry.text = edit.value;
-        }
-      });
-      item.appendChild(edit);
-      setTimeout(function(){ RO.UI.fitTextarea(edit); }, 0);
-      return item;
-    }
-
-    function renderLogHistory(){
-      logHistory.innerHTML = '';
-      // Shows every entry, including the latest -- it used to be excluded here
-      // (staying only in logDisplay, which gets hidden while editing), which
-      // made the most recent entry silently vanish from view once expanded.
-      (task.log || []).forEach(function(entry){
-        logHistory.appendChild(makeLogEntryRow(entry));
-      });
-    }
-
-    // Editor stays open while you click between entries / the new-entry box;
-    // it only collapses back to the compact display when you click elsewhere
-    // on the page (same outside-click pattern as RO.UI.positionMenu's menus).
-    var outsideClickHandler = null;
-    function attachOutsideClick(){
-      outsideClickHandler = function(e){
-        if(logWrap.contains(e.target)) return;
-        showLogDisplayMode();
-      };
-      document.addEventListener('click', outsideClickHandler);
-    }
-    function detachOutsideClick(){
-      if(outsideClickHandler){ document.removeEventListener('click', outsideClickHandler); outsideClickHandler = null; }
-    }
-
-    function showLogEditor(){
-      renderLogHistory();
-      logDisplay.classList.add('hidden');
-      logHistory.classList.remove('hidden');
-      logInput.classList.remove('hidden');
-      logInput.value = '';
-      RO.UI.fitTextarea(logInput);
-      logInput.focus();
-      setTimeout(attachOutsideClick, 0); // deferred so this same click doesn't immediately close it
-    }
-    function showLogDisplayMode(){
-      renderLogDisplay();
-      logHistory.classList.add('hidden');
-      logInput.classList.add('hidden');
-      logDisplay.classList.remove('hidden');
-      detachOutsideClick();
-    }
-
-    logDisplay.addEventListener('click', function(e){ e.stopPropagation(); showLogEditor(); });
-    logHistory.addEventListener('click', function(e){ e.stopPropagation(); });
     logInput.addEventListener('click', function(e){ e.stopPropagation(); });
+    // The task row is draggable={true} for reordering (see handlers.js
+    // dragstart), and a browser quirk means that alone can swallow a
+    // click-and-drag gesture that starts inside a nested textarea -- the
+    // browser treats it as "start dragging the row" instead of "select text",
+    // even though the dragstart handler already excludes textareas. Turning
+    // off dragging on the row for the duration of the mouse-down here (and
+    // back on once the mouse is released anywhere) makes plain text selection
+    // work like it would in any normal textarea.
+    logInput.addEventListener('mousedown', function(){
+      el.draggable = false;
+      document.addEventListener('mouseup', function restore(){
+        el.draggable = true;
+        document.removeEventListener('mouseup', restore);
+      });
+    });
     logInput.addEventListener('input', function(){ RO.UI.fitTextarea(logInput); });
     logInput.addEventListener('keydown', function(e){
       if(e.key !== 'Tab') return;
@@ -186,17 +116,13 @@
       RO.UI.fitTextarea(logInput);
     });
     logInput.addEventListener('blur', function(){
-      if(logInput.value.trim()){
-        RO.Data.addLogEntry(task.id, logInput.value);
-        logInput.value = '';
-        RO.UI.fitTextarea(logInput);
-        renderLogHistory(); // show the new entry immediately, editor stays open
+      if(logInput.value !== (task.log || '')){
+        RO.Data.updateLog(task.id, logInput.value);
+        task.log = logInput.value;
       }
     });
 
-    renderLogDisplay();
-    logWrap.appendChild(logDisplay);
-    logWrap.appendChild(logHistory);
+    setTimeout(function(){ RO.UI.fitTextarea(logInput); }, 0);
     logWrap.appendChild(logInput);
     row.appendChild(logWrap);
 

@@ -108,11 +108,10 @@
     }
 
     // Each past entry is its own small textarea, editable in place and saved
-    // on blur -- log entries are no longer read-only once written.
+    // on blur -- log entries are no longer read-only once written. No date
+    // label; entries just sit together as one running, freely-editable log.
     function makeLogEntryRow(entry){
       var item = document.createElement('div'); item.className = 'task-log-entry';
-      var date = document.createElement('div'); date.className = 'task-log-date';
-      date.textContent = RO.UI.formatProjectDate(entry.createdAt);
       var edit = document.createElement('textarea');
       edit.className = 'task-log-entry-input auto-height';
       edit.rows = 1;
@@ -125,7 +124,7 @@
           entry.text = edit.value;
         }
       });
-      item.appendChild(date); item.appendChild(edit);
+      item.appendChild(edit);
       setTimeout(function(){ RO.UI.fitTextarea(edit); }, 0);
       return item;
     }

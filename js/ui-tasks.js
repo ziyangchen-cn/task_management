@@ -144,14 +144,11 @@
     logWrap.appendChild(logInput);
     row.appendChild(logWrap);
 
-    // action buttons
+    // action buttons. Moving a task between Today and Inbox is drag-and-drop
+    // only now (see handlers.js attachDropZone) -- no "To Inbox" button here.
     var right = document.createElement('div');
     var rebornBtn = '<button data-action="reborn" title="目的变了？关掉这个 task，接着开一个新的">Reborn</button>';
-    if(task.date){
-      right.innerHTML = '<button data-action="edit">Edit</button> ' + rebornBtn + ' <button data-action="unassign">To Inbox</button> <button data-action="delete">Delete</button>';
-    } else {
-      right.innerHTML = '<button data-action="edit">Edit</button> ' + rebornBtn + ' <button data-action="move">Move</button> <button data-action="delete">Delete</button>';
-    }
+    right.innerHTML = '<button data-action="edit">Edit</button> ' + rebornBtn + ' <button data-action="delete">Delete</button>';
     row.appendChild(right);
 
     el.appendChild(row);
@@ -405,13 +402,14 @@
     }
     tr.appendChild(tdAge);
 
-    // actions
+    // actions. Moving to Today is drag-and-drop only now (row is draggable,
+    // see handlers.js attachDropZone) -- no "Move" button here.
     var tdAct = document.createElement('td');
     if(task && task.id){
       var parkBtn = isSomeday
         ? '<button data-action="someday-toggle" class="btn-activate">Activate</button>'
         : '<button data-action="someday-toggle" class="btn-park">Park</button>';
-      tdAct.innerHTML = '<button data-action="move">Move</button> ' + parkBtn + ' <button data-action="delete">Delete</button>';
+      tdAct.innerHTML = parkBtn + ' <button data-action="delete">Delete</button>';
     }
     tr.appendChild(tdAct);
 

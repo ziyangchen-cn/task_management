@@ -17,7 +17,7 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-he
 .today-progress-fill{height:100%;background:#4caf50;border-radius:999px}
 .today-progress-label{font-size:15px;color:#555;min-width:38px}
 .today-summary{margin-bottom:12px}
-.today-summary-input{width:100%;min-height:34px;max-height:120px;overflow:hidden;resize:vertical;background:#fffdf5;border:1px solid #f0dfaa;border-left:4px solid #e0a100;border-radius:4px;font-size:16px;line-height:1.35;padding:7px 9px}
+.today-summary-input{width:100%;min-height:34px;overflow:hidden;resize:vertical;background:#fffdf5;border:1px solid #f0dfaa;border-left:4px solid #e0a100;border-radius:4px;font-size:16px;line-height:1.35;padding:7px 9px}
 .today-summary-input:focus{background:#fff;border-color:#d6b44a;outline:2px solid rgba(224,161,0,0.14)}
 .task-list{display:flex;flex-direction:column;gap:8px}
 .today-drop-line{height:2px;background:#4a90d9;border-radius:1px;margin:0 4px;pointer-events:none;flex-shrink:0}
@@ -33,11 +33,14 @@ body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;line-he
 .task-star{width:24px;min-width:24px;height:24px;padding:0;border:none;background:transparent;color:#a8a8a8;font-size:20px;line-height:1;cursor:pointer}
 .task-star:hover{color:#c98a00}
 .task-star.active{color:#d99a00;font-weight:700}
-.task-main{flex:1 1 auto;min-width:180px;display:flex;flex-direction:column;gap:0;line-height:1.15}
+.task-main{flex:1 1 160px;min-width:160px;display:flex;flex-direction:column;gap:0;line-height:1.15}
 .task .meta{font-size:15px;color:#555;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .project-link{border:none;background:rgba(255,255,255,0.35);color:#1f5f8f;text-decoration:underline;padding:1px 4px;border-radius:3px;font:inherit;cursor:pointer}
 .project-link:hover{background:rgba(255,255,255,0.6)}
-.task-log{flex:0 1 34%;min-width:180px;position:relative}
+/* flex-grow:2 (vs task-main's 1) so any extra row width goes mostly to the
+   log box instead of the title column -- title text is usually short and
+   was claiming leftover space it didn't need. */
+.task-log{flex:2 1 300px;min-width:220px;position:relative}
 .task-log-input{min-height:26px;overflow:hidden;resize:vertical;background:rgba(255,255,255,0.2);font-family:inherit;font-size:16px;font-weight:normal;line-height:1.35;margin-top:0;padding:2px 5px;border:1px solid transparent;position:relative;z-index:1;color:transparent;caret-color:#111;box-sizing:border-box}
 .task-log-input:focus{background:rgba(255,255,255,0.65);border-color:#ccc;outline:2px solid rgba(0,0,0,0.06)}
 /* Sits exactly on top of .task-log-input (same font/padding/border) and shows

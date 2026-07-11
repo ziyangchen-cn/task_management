@@ -46,18 +46,10 @@
       var t = RO.Data.tasks.find(function(x){ return x.id === id; });
       RO.UI.openModal(t);
 
-    } else if(action === 'move'){
-      var moveDate = RO.Data.appState.currentDate;
-      if(moveDate < RO.DateUtils.todayISO()){
-        RO.UI.showConfirmModal({ message: 'Cannot move an inbox task to a date before today.', confirmOnly: true });
-        return;
-      }
-      RO.Data.moveToDate(id, moveDate);
-      RO.UI.renderAll();
-
-    } else if(action === 'unassign'){
-      RO.Data.moveToDate(id, null);
-      RO.UI.renderAll();
+    // Moving a task between Today and Inbox is drag-and-drop only (see
+    // handlers.js attachDropZone below, which calls RO.Data.moveToDate
+    // directly) -- the old "Move"/"To Inbox" buttons that dispatched
+    // action:'move'/'unassign' here were removed, so those branches are gone.
 
     } else if(action === 'reborn'){
       var oldTask = RO.Data.tasks.find(function(x){ return x.id === id; });
